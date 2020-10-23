@@ -1,5 +1,6 @@
 package dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -39,8 +40,19 @@ public class IVillageImpl implements IVillage{
 
 	@Override
 	public List<Village> getAllVillages() {
-		// TODO Auto-generated method stub
-		return null;
+		List <Village> listeV = new ArrayList<Village>();
+
+		try {
+			listeV = em.createQuery( "from Village", Village.class )
+                    .getResultList();
+				
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		    
+
+		return listeV;
 	}
 
 	@Override

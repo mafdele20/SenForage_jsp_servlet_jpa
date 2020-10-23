@@ -16,7 +16,14 @@ public class User implements Serializable{
 	 private String nom;
 	 private String prenom;
 	 private String email;
-	 @ManyToOne
+	 private String password;
+	 public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	@ManyToOne
 	 private Role role = new Role();
 	public User() {
 		super();

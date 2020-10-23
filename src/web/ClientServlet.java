@@ -1,22 +1,28 @@
 package web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.catalina.connector.Response;
 
 import dao.IClient;
 import dao.IClientImpl;
+import dao.IUser;
+import dao.IUserImpl;
 import dao.IVillage;
 import dao.IVillageImpl;
 import metier.entities.Client;
+import metier.entities.User;
 import metier.entities.Village;
 
 /**
@@ -25,7 +31,9 @@ import metier.entities.Village;
 @WebServlet(name ="cs", urlPatterns = {"*.php"})
 public class ClientServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private IClient metier;  
+	private IClient metier; 
+	private IUser metierUser; 
+	private IVillage metierVil  ;
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -39,6 +47,8 @@ public class ClientServlet extends HttpServlet {
 	 */
 	public void init(ServletConfig config) throws ServletException {
 		metier = new IClientImpl();
+		metierUser = new IUserImpl();
+		metierVil = new IVillageImpl();
 	}
 
 	/**
@@ -51,9 +61,14 @@ public class ClientServlet extends HttpServlet {
 			ClientModel model = new ClientModel();
 			model.setCl(clients);
 			request.setAttribute("model", model);
+			
 			request.getRequestDispatcher("client/client.jsp").forward(request, response);
 		}else if (path.equals("/ajoutClient.php")){
 			request.setAttribute("client", new Client());
+			List<Village> villages = metierVil.getAllVillages();
+			VillageModel  modele = new VillageModel();
+			modele.setVille(villages);
+			request.setAttribute("villages", villages);
 			request.getRequestDispatcher("client/ajoutClient.jsp").forward(request, response);
 			
 		}else if (path.equals("/ajoutC.php") &&  (request.getMethod().equals("POST"))){
@@ -85,6 +100,10 @@ public class ClientServlet extends HttpServlet {
 			Long id = Long.parseLong(request.getParameter("id"));
 			Client c =  metier.getClient(id);
 			request.setAttribute("client", c);
+			List<Village> villages = metierVil.getAllVillages();
+			VillageModel  modele = new VillageModel();
+			modele.setVille(villages);
+			request.setAttribute("villages", villages);
 			request.getRequestDispatcher("client/EditClient.jsp").forward(request, response);
 			
 			
@@ -107,9 +126,38 @@ public class ClientServlet extends HttpServlet {
 			request.setAttribute("client", c);
 			request.getRequestDispatcher("client/confirmationClient.jsp").forward(request, response);
 			
-		}else {
+		}else if(path.equals("/login.php") &&  (request.getMethod().equals("POST"))){
+			
+		      String email = request.getParameter("email");
+		      String pwd = request.getParameter("password");
+		      
+		        User u = metierUser.getUseByPass(email,pwd);
+		        
+			     if(u != null) {
+			    	 request.getRequestDispatcher("client/client.jsp").forward(request, response);
+			          HttpSession session = request.getSession(true);                                    
+			          session.setAttribute("user", u);
+			          session.setMaxInactiveInterval(3036); 
+			          //response.sendRedirect("login.jsp");
+			     }else {   
+			    	     String error ="<font color=red>Email ou password incorect.</font>";
+			    	     request.setAttribute("error", error);
+						request.getRequestDispatcher("login.jsp").forward(request, response);
+			      }
+			
+		
+		}else if(path.equals("/deconect.php")){
+			  HttpSession session = request.getSession(false);
+		      // session.setAttribute("user", null);
+		      session.removeAttribute("user");
+		      session.getMaxInactiveInterval();
+			  request.getRequestDispatcher("login.jsp").forward(request, response);
+		}
+		else  {
+			
 			response.sendError(Response.SC_NOT_FOUND);
 		}
+		
 	
 		response.getWriter().append("Served at: ").append(request.getContextPath());
 	}

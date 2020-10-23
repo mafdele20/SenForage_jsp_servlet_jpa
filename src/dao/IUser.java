@@ -11,4 +11,6 @@ public interface IUser {
 	 public List<User> getAllUsers();
 	 public User update(User u);
 	 public void delele(Long id);
+	 
+	 public User getUseByPass(String email, String password);
 }
